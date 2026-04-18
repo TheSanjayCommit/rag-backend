@@ -2,7 +2,7 @@
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
 
-# ── Pydantic (pre-built wheels for Python 3.11, no Rust compilation) ──────────
+# ── Pydantic (pre-built wheels for Python 3.11) ───────────────────────────────
 pydantic==2.7.1
 pydantic-settings==2.2.1
 
@@ -12,9 +12,8 @@ python-dotenv==1.0.1
 # ── Vector Search ─────────────────────────────────────────────────────────────
 faiss-cpu==1.13.2
 
-# ── Embeddings (CPU-only, no CUDA) ────────────────────────────────────────────
+# ── Embeddings (torch is a transitive dependency — let pip resolve it) ────────
 sentence-transformers==2.7.0
-torch==2.2.2+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 
 # ── HTTP Client ───────────────────────────────────────────────────────────────
 httpx==0.27.2
