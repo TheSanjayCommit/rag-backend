@@ -25,8 +25,9 @@ app = FastAPI(
     description="Production-grade RAG system for global college advisory.",
     version="1.1.0",
     lifespan=lifespan,
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
+    # Docs enabled — useful for testing and frontend integration
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
@@ -41,9 +42,17 @@ app.add_middleware(
 
 app.include_router(query.router, prefix="/api/v1", tags=["Assistant"])
 
-@app.get("/health")
+@app.get("/", tags=["Health"])
+async def root():
+    return {"message": "College RAG API is running", "version": "1.1.0", "docs": "/docs"}
+
+@app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "healthy", "version": "1.1.0"}
+
+@app.get("/test", tags=["Health"])
+async def test():
+    return {"status": "ok", "message": "Routes are working correctly"}
 
 if __name__ == "__main__":
     uvicorn.run(
