@@ -9,8 +9,8 @@ pydantic-settings==2.5.2
 # Environment variables
 python-dotenv==1.0.1
 
-# Vector search — use 1.7.4 for max Python 3.11 compatibility on Render
-faiss-cpu==1.7.4
+# Vector search — latest available version on Render/PyPI
+faiss-cpu==1.13.2
 
 # Embeddings — pinned to avoid torch/cuda conflicts on Render CPU
 sentence-transformers==2.7.0
