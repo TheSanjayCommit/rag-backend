@@ -2,9 +2,13 @@ import pandas as pd
 import numpy as np
 import os
 import re
+import logging
 from app.utils.embeddings import get_embeddings, get_embedding_dimension
 from app.utils.vector_store import create_index, save_index, load_index
 from app.config.settings import settings
+
+logger = logging.getLogger(__name__)
+_rag_initialized = False
 
 indices = {"india": None, "outbound": None, "inbound": None}
 metadatas = {"india": None, "outbound": None, "inbound": None}
@@ -82,28 +86,50 @@ def process_csv_to_docs(file_path, category):
     return texts, metadata
 
 def initialize_rag():
-    global indices, metadatas
-    datasets = {"india": "Indian_Engineering_Colleges_Dataset.csv", "outbound": "Share of Students Studying Abroad.csv", "inbound": "Share of Students from Abroad.csv"}
-    for cat, filename in datasets.items():
-        idx, meta = load_index(cat)
-        if idx and meta:
-            indices[cat], metadatas[cat] = idx, meta
-            continue
-        file_path = os.path.join(settings.DATA_PATH, filename)
-        texts, meta = process_csv_to_docs(file_path, cat)
-        if texts:
-            embeddings = get_embeddings(texts)
-            idx = create_index(get_embedding_dimension())
-            idx.add(np.array(embeddings).astype('float32'))
-            save_index(idx, meta, cat)
-            indices[cat], metadatas[cat] = idx, meta
+    global indices, metadatas, _rag_initialized
+    if _rag_initialized:
+        return
+    try:
+        datasets = {
+            "india": "Indian_Engineering_Colleges_Dataset.csv",
+            "outbound": "Share of Students Studying Abroad.csv",
+            "inbound": "Share of Students from Abroad.csv"
+        }
+        for cat, filename in datasets.items():
+            try:
+                idx, meta = load_index(cat)
+                if idx and meta:
+                    indices[cat], metadatas[cat] = idx, meta
+                    logger.info("Loaded FAISS index for '%s' from disk.", cat)
+                    continue
+                file_path = os.path.join(settings.DATA_PATH, filename)
+                texts, meta = process_csv_to_docs(file_path, cat)
+                if texts:
+                    logger.info("Building FAISS index for '%s' (%d docs)...", cat, len(texts))
+                    embeddings = get_embeddings(texts)
+                    idx = create_index(get_embedding_dimension())
+                    idx.add(np.array(embeddings).astype('float32'))
+                    save_index(idx, meta, cat)
+                    indices[cat], metadatas[cat] = idx, meta
+                    logger.info("FAISS index for '%s' ready.", cat)
+            except Exception as e:
+                logger.warning("Skipping index '%s': %s", cat, str(e))
+        _rag_initialized = True
+        logger.info("RAG initialization complete.")
+    except Exception as e:
+        logger.error("RAG initialization failed: %s", str(e))
 
 def search_rag(query, category, filters=None, top_k=10):
-    if category not in indices or indices[category] is None: return []
-    # Ensure query is string before embedding
+    # Lazy init: build index on first request if not already done
+    if not _rag_initialized:
+        initialize_rag()
+
+    if category not in indices or indices[category] is None:
+        return []
     q_str = str(query)
     query_vector = get_embeddings(q_str)
     _, ann_indices = indices[category].search(np.array([query_vector]).astype('float32'), top_k)
     raw_results = [metadatas[category][i] for i in ann_indices[0] if i != -1 and i < len(metadatas[category])]
-    if filters: raw_results = apply_filters(raw_results, filters)
+    if filters:
+        raw_results = apply_filters(raw_results, filters)
     return rank_results(raw_results)
