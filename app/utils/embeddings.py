@@ -1,27 +1,39 @@
-from sentence_transformers import SentenceTransformer
-import os
+from fastembed import TextEmbedding
+import numpy as np
 
-# Initialize model once at startup
-# Using a small, fast model for production speed
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+# Lazy-loaded — model is NOT loaded at import time, only on first use
+_model = None
+
+def _get_model() -> TextEmbedding:
+    """
+    Lazy loader: initialises the ONNX embedding model on first call only.
+    Uses fastembed (ONNX runtime) instead of sentence-transformers (PyTorch).
+    RAM usage: ~80MB vs ~1.5GB for torch — safe for Render free tier (512MB).
+    """
+    global _model
+    if _model is None:
+        _model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    return _model
 
 def get_embeddings(text):
     """
     Guaranteed string-safe embedding generation.
-    Prevents Multimodal ValueError by force-casting input.
+    Returns a numpy array — single input returns 1D, list input returns 2D.
     """
+    model = _get_model()
+
     if isinstance(text, dict):
-        # If a dict leaked through, extract the most likely text field
         text = text.get('text', text.get('queries', str(text)))
-    
+
     if isinstance(text, list):
-        # Ensure all items in list are strings
         text = [str(t) for t in text]
+        embeddings = list(model.embed(text))
+        return np.array(embeddings)
     else:
-        # Ensure single input is a string
         text = str(text)
+        embeddings = list(model.embed([text]))
+        return np.array(embeddings[0])
 
-    return model.encode(text)
-
-def get_embedding_dimension():
-    return model.get_sentence_embedding_dimension()
+def get_embedding_dimension() -> int:
+    """Returns the embedding dimension for FAISS index creation."""
+    return 384  # all-MiniLM-L6-v2 fixed dimension
