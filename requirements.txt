@@ -1,12 +1,27 @@
+# Core API framework
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
+
+# Data validation
 pydantic==2.9.2
 pydantic-settings==2.5.2
+
+# Environment variables
 python-dotenv==1.0.1
-faiss-cpu==1.9.0
-sentence-transformers==3.3.1
+
+# Vector search — use 1.7.4 for max Python 3.11 compatibility on Render
+faiss-cpu==1.7.4
+
+# Embeddings — pinned to avoid torch/cuda conflicts on Render CPU
+sentence-transformers==2.7.0
+
+# HTTP client for LLM + Tavily calls
 httpx==0.27.2
 requests==2.32.3
+
+# Data processing
 pandas==2.2.3
 numpy==1.26.4
+
+# Web search
 tavily-python==0.5.0
