@@ -1,0 +1,38 @@
+# ── Python Artifacts ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+*.egg
+
+# ── Virtual Environment ───────────────────────────────────────────────────────
+.venv
+venv/
+env/
+ENV/
+
+# ── Environment / Secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── FAISS Vector Index (large binaries — rebuilt on startup) ─────────────────
+app/db/
+app/db/faiss_index/
+app/db/faiss_index/*.faiss
+app/db/faiss_index/*.index
+app/db/faiss_index/*.pkl
+app/db/faiss_index/*.bin
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS / IDE ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
