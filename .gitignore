@@ -19,13 +19,13 @@ ENV/
 .env.*
 !.env.example
 
-# ── FAISS Vector Index (large binaries — rebuilt on startup) ─────────────────
-app/db/
-app/db/faiss_index/
-app/db/faiss_index/*.faiss
-app/db/faiss_index/*.index
-app/db/faiss_index/*.pkl
-app/db/faiss_index/*.bin
+# ── FAISS Vector Index (Pushing pre-built index to bypass Render memory limits) ──
+# app/db/
+# app/db/faiss_index/
+# app/db/faiss_index/*.faiss
+# app/db/faiss_index/*.index
+# app/db/faiss_index/*.pkl
+# app/db/faiss_index/*.bin
 
 # ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
