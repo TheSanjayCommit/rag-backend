@@ -53,7 +53,10 @@ async def search_rag(query: str, k: int = 5):
         results = []
         for i in indices[0]:
             if i != -1 and i < len(docs):
-                results.append(docs[i])
+                results.append({
+                    "text": docs[i],
+                    "name": "Internal Database"
+                })
         return results
     except Exception as e:
         print(f"Search error: {e}")

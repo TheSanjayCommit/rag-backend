@@ -53,8 +53,9 @@ async def route_and_stream(query: str, history: list = None):
     if not is_foreign:
         search_queries = await expand_query(norm_query, history)
         for sq in search_queries:
-            hits = search_rag(str(sq), "india", filters=filters)
-            if is_valid_rag([h["text"] for h in hits], str(sq)):
+            # Call the new optimized search_rag (now async and simplified)
+            hits = await search_rag(str(sq), k=5)
+            if hits:
                 context_hits.extend(hits)
 
         if context_hits and not is_compare:
