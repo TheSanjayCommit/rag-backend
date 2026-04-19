@@ -13,10 +13,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from app.utils.indexer import build_index_if_missing
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ── Startup: just log — RAG loads lazily on first request ──────────────
-    logger.info("College RAG API starting up. RAG index will load on first request.")
+    # Ensure database is ready before taking requests
+    logger.info("🚀 Checking RAG database...")
+    build_index_if_missing()
     yield
     logger.info("College RAG API shutting down.")
 
