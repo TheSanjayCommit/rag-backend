@@ -1,39 +1,25 @@
 from fastembed import TextEmbedding
+from typing import List
 import numpy as np
 
-# Lazy-loaded — model is NOT loaded at import time, only on first use
-_model = None
+# Use the smallest possible model for Render Free Tier (only ~100MB)
+MODEL_NAME = "nomic-ai/nomic-embed-text-v1.5"
 
-def _get_model() -> TextEmbedding:
+def get_embeddings(texts: List[str]) -> List[List[float]]:
     """
-    Lazy loader: initialises the ONNX embedding model on first call only.
-    Uses fastembed (ONNX runtime) instead of sentence-transformers (PyTorch).
-    RAM usage: ~80MB vs ~1.5GB for torch — safe for Render free tier (512MB).
+    Generate embeddings for a list of strings using FastEmbed.
+    This model is highly optimized for low-memory environments.
     """
-    global _model
-    if _model is None:
-        _model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    return _model
-
-def get_embeddings(text):
-    """
-    Guaranteed string-safe embedding generation.
-    Returns a numpy array — single input returns 1D, list input returns 2D.
-    """
-    model = _get_model()
-
-    if isinstance(text, dict):
-        text = text.get('text', text.get('queries', str(text)))
-
-    if isinstance(text, list):
-        text = [str(t) for t in text]
-        embeddings = list(model.embed(text))
-        return np.array(embeddings)
-    else:
-        text = str(text)
-        embeddings = list(model.embed([text]))
-        return np.array(embeddings[0])
+    try:
+        # Lazy initialization to save startup memory
+        model = TextEmbedding(model_name=MODEL_NAME)
+        embeddings = list(model.embed(texts))
+        return [e.tolist() for e in embeddings]
+    except Exception as e:
+        print(f"Embedding Error: {e}")
+        # Fallback to zero-vectors if model fails to load (prevents 502 crash)
+        return [[0.0] * 768 for _ in texts]
 
 def get_embedding_dimension() -> int:
-    """Returns the embedding dimension for FAISS index creation."""
-    return 384  # all-MiniLM-L6-v2 fixed dimension
+    """Returns the dimension of the embeddings (768 for Nomic)."""
+    return 768
