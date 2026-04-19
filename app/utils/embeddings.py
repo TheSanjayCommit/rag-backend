@@ -11,8 +11,8 @@ def get_embeddings(texts: List[str]) -> List[List[float]]:
     This model is highly optimized for low-memory environments.
     """
     try:
-        # Lazy initialization to save startup memory
-        model = TextEmbedding(model_name=MODEL_NAME)
+        # Lazy initialization to save startup memory. Force 1 thread for Render.
+        model = TextEmbedding(model_name=MODEL_NAME, threads=1)
         embeddings = list(model.embed(texts))
         return [e.tolist() for e in embeddings]
     except Exception as e:

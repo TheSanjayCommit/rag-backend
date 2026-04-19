@@ -17,9 +17,8 @@ from app.utils.indexer import build_index_if_missing
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure database is ready before taking requests
-    logger.info("🚀 Checking RAG database...")
-    build_index_if_missing()
+    # Startup: Resources are pre-built by start.sh or loaded lazily
+    logger.info("College RAG API starting up. Database is pre-loaded or ready.")
     yield
     logger.info("College RAG API shutting down.")
 
